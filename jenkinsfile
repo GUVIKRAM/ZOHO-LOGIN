@@ -1,22 +1,71 @@
-pipeline{
-	agent any
-		stages{
-			stage('Checkout'){
-				steps{
-					git branch: 'main',
-					url: 'https://github.com/GUVIKRAM/ZOHO-LOGIN'
-				}
-			}
-			stage('Build'){
-				steps{
-					bat 'mvn clean install'
-				}
-			}
-			stage('Test'){
-				steps{
-					bat 'mvn test'
-				}
-				
-		}
-	}
-}	
+pipeline {
+    agent any
+
+    tools {
+        maven 'maven - 3.9.9'
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                git branch: 'main',
+                    url: 'https://github.com/GUVIKRAM/ZOHO-LOGIN'
+            }
+        }
+
+        stage('Build') {
+            steps {
+                bat 'mvn clean install'
+            }
+        }
+
+        stage('Test') {
+            steps {
+                bat 'mvn test'
+            }
+        }
+    }
+
+    post {
+        success {
+            emailext(
+                subject: "SUCCESS: ${JOB_NAME} - Build #${BUILD_NUMBER}",
+                body: """
+                    Hello,
+
+                    The Jenkins pipeline completed successfully.
+
+                    Job: ${JOB_NAME}
+                    Build Number: ${BUILD_NUMBER}
+                    Build URL: ${BUILD_URL}
+                    Status: SUCCESS
+                """,
+                to: 'guddetivikram99@gmail.com'
+            )
+        }
+
+        failure {
+            emailext(
+                subject: "FAILURE: ${JOB_NAME} - Build #${BUILD_NUMBER}",
+                body: """
+                    Hello,
+
+                    The Jenkins pipeline has failed.
+
+                    Job: ${JOB_NAME}
+                    Build Number: ${BUILD_NUMBER}
+                    Build URL: ${BUILD_URL}
+                    Status: FAILURE
+
+                    Please check the Jenkins console output:
+                    ${BUILD_URL}console
+                """,
+                to: 'guddetivikram99@gmail.com'
+            )
+        }
+
+        always {
+            echo 'Jenkins pipeline execution completed.'
+        }
+    }
+}
